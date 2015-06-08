@@ -1,0 +1,20 @@
+{
+  "name": "nodeJS-project",
+  "version": "0.0.0",
+  "homepage": "https://github.com/AtticusFetch/nodeJS-project",
+  "main": "index.html",
+  "moduleType": [
+    "node"
+  ],
+  "authors": [
+    "Ivan Iankovskyi"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
