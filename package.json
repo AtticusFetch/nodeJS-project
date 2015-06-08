@@ -1,0 +1,32 @@
+{
+  "name": "nodejs-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AtticusFetch/nodeJS-project.git"
+  },
+  "author": "Ivan Iankovskyi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AtticusFetch/nodeJS-project/issues"
+  },
+  "homepage": "https://github.com/AtticusFetch/nodeJS-project#readme",
+  "devDependencies": {
+    "angular": "^1.3.16",
+    "http-server": "^0.6.1",
+    "tmp": "0.0.23",
+    "bower": "^1.3.1",
+    "shelljs": "^0.2.6",
+    "angular-mocks": "1.3.x",
+    "jquery": "~2.1.1",
+    "bootstrap": "~3.1.1",
+    "angular-route": "1.3.x",
+    "angular-resource": "1.3.x",
+    "angular-animate": "1.3.x"
+  }
+}
