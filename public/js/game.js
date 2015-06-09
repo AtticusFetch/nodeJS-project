@@ -57,7 +57,13 @@ var setEventHandlers = function() {
 
 	// Player removed message received
 	socket.on("remove player", onRemovePlayer);
+
+	socket.on("increase player", onIncrease);
 };
+
+function onIncrease(data) {
+	playerById(data.id).setSize(playerById(data.id).getSize() * 1.5);
+}
 
 // Keyboard key down
 function onKeydown(e) {
@@ -131,7 +137,7 @@ function onRemovePlayer(data) {
 
 	// Player not found
 	if (!removePlayer) {
-		alert('you lost');
+		console.log(data.id + 'lost');
 		socket.disconnect();
 		return;
 	}
