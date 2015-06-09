@@ -1,139 +1,128 @@
-/**************************************************
-** NODE.JS REQUIREMENTS
-**************************************************/
-var util = require("util"),					// Utility resources (logging, object inspection, etc)
-	io = require("socket.io"),				// Socket.IO
-	Player = require("./Player").Player;	// Player class
+var util = require("util"),
+    io = require("socket.io"),
+    Player = require("./Player").Player;
 
+var socket,
+    players;
 
-/**************************************************
-** GAME VARIABLES
-**************************************************/
-var socket,		// Socket controller
-	players;	// Array of connected players
-
-
-/**************************************************
-** GAME INITIALISATION
-**************************************************/
 function init() {
-	// Create an empty array to store players
-	players = [];
 
-	// Set up Socket.IO to listen on port 8000
-	socket = io.listen(3000);
+    players = [];
 
-	// Configure Socket.IO
-	socket.configure(function() {
-		// Only use WebSockets
-		socket.set("transports", ["websocket"]);
+    socket = io.listen(3000);
 
-		// Restrict log output
-		socket.set("log level", 2);
-	});
+    socket.configure(function () {
+        socket.set("transports", ["websocket"]);
+        socket.set("log level", 2);
+    });
 
-	// Start listening for events
-	setEventHandlers();
+    setEventHandlers();
+}
+
+
+var setEventHandlers = function () {
+    socket.sockets.on("connection", onSocketConnection);
 };
 
-
-/**************************************************
-** GAME EVENT HANDLERS
-**************************************************/
-var setEventHandlers = function() {
-	// Socket.IO
-	socket.sockets.on("connection", onSocketConnection);
-};
-
-// New socket connection
 function onSocketConnection(client) {
-	util.log("New player has connected: "+client.id);
+    util.log("New player has connected: " + client.id);
 
-	// Listen for client disconnected
-	client.on("disconnect", onClientDisconnect);
+    client.on("disconnect", onClientDisconnect);
 
-	// Listen for new player message
-	client.on("new player", onNewPlayer);
+    client.on("new player", onNewPlayer);
 
-	// Listen for move player message
-	client.on("move player", onMovePlayer);
-};
+    client.on("move player", onMovePlayer);
 
-// Socket client has disconnected
+    client.on("remove player", onClientDisconnect);
+}
+
 function onClientDisconnect() {
-	util.log("Player has disconnected: "+this.id);
+    util.log("Player has disconnected: " + this.id);
 
-	var removePlayer = playerById(this.id);
+    var removePlayer = playerById(this.id);
 
-	// Player not found
-	if (!removePlayer) {
-		util.log("Player not found: "+this.id);
-		return;
-	};
+    if (!removePlayer) {
+        util.log("Player not found: " + this.id);
+        return;
+    }
 
-	// Remove player from players array
-	players.splice(players.indexOf(removePlayer), 1);
 
-	// Broadcast removed player to connected socket clients
-	this.broadcast.emit("remove player", {id: this.id});
-};
+    players.splice(players.indexOf(removePlayer), 1);
 
-// New player has joined
+    this.broadcast.emit("remove player", {id: this.id});
+}
+
 function onNewPlayer(data) {
-	// Create a new player
-	var newPlayer = new Player(data.x, data.y);
-	newPlayer.id = this.id;
+    var newPlayer = new Player(data.x, data.y);
+    newPlayer.id = this.id;
 
-	// Broadcast new player to connected socket clients
-	this.broadcast.emit("new player", {id: newPlayer.id, x: newPlayer.getX(), y: newPlayer.getY()});
+    this.broadcast.emit("new player", {id: newPlayer.id, x: newPlayer.getX(), y: newPlayer.getY()});
 
-	// Send existing players to the new player
-	var i, existingPlayer;
-	for (i = 0; i < players.length; i++) {
-		existingPlayer = players[i];
-		this.emit("new player", {id: existingPlayer.id, x: existingPlayer.getX(), y: existingPlayer.getY()});
-	};
-		
-	// Add new player to the players array
-	players.push(newPlayer);
-};
+    var i, existingPlayer;
+    for (i = 0; i < players.length; i++) {
+        existingPlayer = players[i];
+        this.emit("new player", {id: existingPlayer.id, x: existingPlayer.getX(), y: existingPlayer.getY()});
+    }
 
-// Player has moved
+
+    players.push(newPlayer);
+}
+
 function onMovePlayer(data) {
-	// Find player in array
-	var movePlayer = playerById(this.id);
+    var movePlayer = playerById(this.id);
 
-	// Player not found
-	if (!movePlayer) {
-		util.log("Player not found: "+this.id);
-		return;
-	};
+    if (!movePlayer) {
+        util.log("Player not found: " + this.id);
+        return;
+    }
 
-	// Update player position
-	movePlayer.setX(data.x);
-	movePlayer.setY(data.y);
+    // Update player position
+    movePlayer.setX(data.x);
+    movePlayer.setY(data.y);
 
-	// Broadcast updated position to connected socket clients
-	this.broadcast.emit("move player", {id: movePlayer.id, x: movePlayer.getX(), y: movePlayer.getY()});
-};
+    var checkCollision = new isCollide(this.id);
+    if(checkCollision[0]) {
+        this.emit("remove player", {id: checkCollision[1]});
+    }
+
+    // Broadcast updated position to connected socket clients
+    this.broadcast.emit("move player", {id: movePlayer.id, x: movePlayer.getX(), y: movePlayer.getY()});
+}
+
+function onRemovePlayer(data) {
+    var removePlayer = playerById(data.id);
+
+    console.log('inside onremoveplayer');
+
+    if (!removePlayer) {
+        util.log("Player not found: " + data.id);
+        return;
+    }
 
 
-/**************************************************
-** GAME HELPER FUNCTIONS
-**************************************************/
-// Find player by ID
+    players.splice(players.indexOf(removePlayer), 1);
+}
+
+function isCollide(player_id) {
+    for (i = 0; i < players.length; i++) {
+        if (player_id != players[i].id && (playerById(player_id).getX() <= players[i].getX() + 7) && (playerById(player_id).getX() >= players[i].getX() - 7) &&
+            (playerById(player_id).getY() <= players[i].getY() + 7) && (playerById(player_id).getY() >= players[i].getY() - 7)
+        ) {
+            return [true, players[i].id]
+        }
+    }
+}
+
+
 function playerById(id) {
-	var i;
-	for (i = 0; i < players.length; i++) {
-		if (players[i].id == id)
-			return players[i];
-	};
-	
-	return false;
-};
+    var i;
+    for (i = 0; i < players.length; i++) {
+        if (players[i].id == id)
+            return players[i];
+    }
+
+    return false;
+}
 
 
-/**************************************************
-** RUN THE GAME
-**************************************************/
 init();
