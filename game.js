@@ -1,6 +1,9 @@
 var util = require("util"),
     io = require("socket.io"),
-    Player = require("./Player").Player;
+    Player = require("./Player").Player,
+    app = require('http').createServer(handler);
+
+app.listen(3000);
 
 var socket,
     players;
@@ -32,8 +35,6 @@ function onSocketConnection(client) {
     client.on("new player", onNewPlayer);
 
     client.on("move player", onMovePlayer);
-
-    client.on("remove player", onClientDisconnect);
 }
 
 function onClientDisconnect() {
@@ -81,8 +82,11 @@ function onMovePlayer(data) {
     movePlayer.setY(data.y);
 
     var checkCollision = new isCollide(this.id);
-    if(checkCollision[0]) {
+    if (checkCollision[0]) {
+        var removePlayer = playerById(checkCollision[1]);
+        players.splice(players.indexOf(removePlayer), 1);
         this.emit("remove player", {id: checkCollision[1]});
+        this.broadcast.emit("remove player", {id: checkCollision[1]});
     }
 
     // Broadcast updated position to connected socket clients

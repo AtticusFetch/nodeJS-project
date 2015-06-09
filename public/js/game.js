@@ -118,23 +118,36 @@ function onMovePlayer(data) {
 	// Update player position
 	movePlayer.setX(data.x);
 	movePlayer.setY(data.y);
+
+	var checkCollision = new isCollide(this.id);
+	if (checkCollision[0]) {
+		this.emit("remove player", {id: checkCollision[1]});
+	}
 }
 
 // Remove player
 function onRemovePlayer(data) {
-
-
-
 	var removePlayer = playerById(data.id);
 
 	// Player not found
 	if (!removePlayer) {
-		console.log("Player not found: "+data.id);
+		alert('you lost');
+		socket.disconnect();
 		return;
 	}
 
 	// Remove player from array
 	remotePlayers.splice(remotePlayers.indexOf(removePlayer), 1);
+}
+
+function isCollide(player_id) {
+	for (i = 0; i < players.length; i++) {
+		if (player_id != players[i].id && (playerById(player_id).getX() <= players[i].getX() + 7) && (playerById(player_id).getX() >= players[i].getX() - 7) &&
+			(playerById(player_id).getY() <= players[i].getY() + 7) && (playerById(player_id).getY() >= players[i].getY() - 7)
+		) {
+			return [true, players[i].id]
+		}
+	}
 }
 
 
