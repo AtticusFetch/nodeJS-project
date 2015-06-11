@@ -36,7 +36,6 @@ var Player = function (startX, startY) {
         } else if (keys.down) {
             y += moveAmount;
         }
-        ;
 
         // Left key takes priority over right
         if (keys.left) {
@@ -44,7 +43,6 @@ var Player = function (startX, startY) {
         } else if (keys.right) {
             x += moveAmount;
         }
-        ;
 
         return (prevX != x || prevY != y) ? true : false;
     };

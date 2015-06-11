@@ -25,7 +25,7 @@ function init() {
 	localPlayer = new Player(startX, startY);
 
 	// Initialise socket connection
-	socket = io.connect("http://localhost", {port: 3000, transports: ["websocket"]});
+	//socket = io.connect("http://localhost", {port: 3000, transports: ["websocket"]});
 
 	// Initialise remote players array
 	remotePlayers = [];
@@ -36,7 +36,7 @@ function init() {
 
 
 var setEventHandlers = function() {
-	// Keyboard
+	// Keyboard1
 	window.addEventListener("keydown", onKeydown, false);
 	window.addEventListener("keyup", onKeyup, false);
 
@@ -96,6 +96,7 @@ function onSocketConnected() {
 
 // Socket disconnected
 function onSocketDisconnect() {
+    alert('you lost');
 	console.log("Disconnected from socket server");
 }
 
@@ -134,7 +135,6 @@ function onMovePlayer(data) {
 // Remove player
 function onRemovePlayer(data) {
 	var removePlayer = playerById(data.id);
-
 	// Player not found
 	if (!removePlayer) {
 		console.log(data.id + 'lost');
@@ -148,9 +148,9 @@ function onRemovePlayer(data) {
 
 function isCollide(player_id) {
 	for (i = 0; i < players.length; i++) {
-		if (player_id != players[i].id && (playerById(player_id).getX() <= players[i].getX() + 7) && (playerById(player_id).getX() >= players[i].getX() - 7) &&
-			(playerById(player_id).getY() <= players[i].getY() + 7) && (playerById(player_id).getY() >= players[i].getY() - 7)
-		) {
+        if (player_id != players[i].id && (playerById(player_id).getX() <= players[i].getX() + 6) && (playerById(player_id).getX() >= players[i].getX() - 6) &&
+            (playerById(player_id).getY() <= players[i].getY() + 6) && (playerById(player_id).getY() >= players[i].getY() - 6)
+        ) {
 			return [true, players[i].id]
 		}
 	}

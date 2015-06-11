@@ -1,43 +1,11 @@
 var util = require("util"),
-    io = require("socket.io"),
-    fs = require('fs'),
     Player = require("./Player").Player;
-/*app = require('http').createServer(function(req, res) {
- var
- content = '',
- fileName = 'index.html',//the file that was requested
- localFolder = __dirname + '/public/';//where our public files are located
+var express = require('express');
+var app = express();
+var http = require('http').Server(app);
+var io = require('socket.io')(http);
 
- //NOTE: __dirname returns the root folder that
- //this javascript file is in.
-
- if(fileName === 'index.html'){//if index.html was requested...
- content = localFolder + fileName;//setup the file name to be returned
-
- //reads the file referenced by 'content'
- //and then calls the anonymous function we pass in
- fs.readFile(content,function(err,contents){
- //if the fileRead was successful...
- if(!err){
- //send the contents of index.html
- //and then close the request
- res.end(contents);
- } else {
- //otherwise, let us inspect the eror
- //in the console
- console.dir(err);
- };
- });
- } else {
- //if the file was not found, set a 404 header...
- res.writeHead(404, {'Content-Type': 'text/html'});
- //send a custom 'file not found' message
- //and then close the request
- res.end('<h1>Sorry, the page you are looking for cannot be found.</h1>');
- };
- });
-
- app.listen(8000);*/
+app.use(express.static('public'));
 
 var socket,
     players;
@@ -46,19 +14,16 @@ function init() {
 
     players = [];
 
-    socket = io.listen(3000);
-
-    socket.configure(function () {
-        socket.set("transports", ["websocket"]);
-        socket.set("log level", 2);
+    //socket = io.listen(3000);
+    http.listen(3000, function() {
+        console.log('server started on 3000');
     });
-
     setEventHandlers();
 }
 
 
 var setEventHandlers = function () {
-    socket.sockets.on("connection", onSocketConnection);
+    io.sockets.on('connection', onSocketConnection);
 };
 
 function onSocketConnection(client) {
@@ -106,7 +71,9 @@ function onNewPlayer(data) {
 }
 
 function onIncrease(data) {
+    console.log('increase func' + data.id);
     playerById(data.id).setSize(playerById(data.id).getSize() * 1.5);
+    this.broadcast.emit('increase player', data);
 }
 
 function onMovePlayer(data) {
@@ -127,10 +94,10 @@ function onMovePlayer(data) {
     if (checkCollision[0]) {
         var removePlayer = playerById(checkCollision[1]);
         players.splice(players.indexOf(removePlayer), 1);
-        this.emit("remove player", {id: checkCollision[1]});
-        this.broadcast.emit("remove player", {id: checkCollision[1]});
         this.emit("increase player", {id: tmp});
         this.broadcast.emit("increase player", {id: tmp});
+        this.emit("remove player", {id: checkCollision[1]});
+        this.broadcast.emit("remove player", {id: checkCollision[1]});
     }
 
     // Broadcast updated position to connected socket clients
@@ -152,9 +119,10 @@ function onRemovePlayer(data) {
 }
 
 function isCollide(player_id) {
-    for (i = 0; i < players.length; i++) {
-        if (player_id != players[i].id && (playerById(player_id).getX() <= players[i].getX() + players[i].getSize() / 2) && (playerById(player_id).getX() >= players[i].getX() - players[i].getSize() / 2) &&
-            (playerById(player_id).getY() <= players[i].getY() + players[i].getSize() / 2) && (playerById(player_id).getY() >= players[i].getY() - players[i].getSize() / 2)
+    for (var i = 0; i < players.length; i++) {
+        var halfAsize = 6;
+        if (player_id != players[i].id && (playerById(player_id).getX() <= players[i].getX() + halfAsize) && (playerById(player_id).getX() >= players[i].getX() - halfAsize) &&
+            (playerById(player_id).getY() <= players[i].getY() + halfAsize) && (playerById(player_id).getY() >= players[i].getY() - halfAsize)
         ) {
             return [true, players[i].id]
         }

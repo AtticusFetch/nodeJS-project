@@ -1,7 +1,7 @@
 var Player = function (startX, startY) {
     var x = startX,
         y = startY,
-        size = 10,
+        size = 70,
         id;
 
     var getX = function () {
